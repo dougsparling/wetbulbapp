@@ -1,5 +1,6 @@
 [versions]
 agp = "8.5.1"
+lifecycleViewmodelCompose = "2.8.3"
 retrofit = "2.11.0"
 kotlin = "1.9.0"
 coreKtx = "1.10.1"
@@ -12,6 +13,7 @@ composeBom = "2024.04.01"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
