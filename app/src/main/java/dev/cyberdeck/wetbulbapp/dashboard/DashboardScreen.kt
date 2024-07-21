@@ -2,6 +2,7 @@ package dev.cyberdeck.wetbulbapp.dashboard
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -39,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import dev.cyberdeck.wetbulbapp.R
 import dev.cyberdeck.wetbulbapp.openmeteo.Conditions
 import java.time.LocalTime
 import java.time.temporal.ChronoField
@@ -63,6 +67,8 @@ fun DashboardScreen(
     LaunchedEffect(locationPermissionState.status) {
         if (locationPermissionState.status.isGranted) {
             viewModel.refresh()
+        } else {
+            locationPermissionState.launchPermissionRequest()
         }
     }
 
@@ -78,11 +84,15 @@ fun DashboardScreen(
             ) {
                 when (val state = uiState) {
                     DashboardViewModel.State.Empty -> {
-                        Text("pull to refresh")
+
                     }
 
                     DashboardViewModel.State.NoLocation -> {
-                        Text("need location permission")
+                        Text(
+                            text = stringResource(R.string.need_location_permission),
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(16.dp)
+                        )
                     }
 
                     is DashboardViewModel.State.Ready -> {
@@ -101,17 +111,23 @@ fun ForecastedConditions(forecast: List<Conditions>) {
     Surface(
         tonalElevation = 4.dp,
         shadowElevation = 2.dp,
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier.padding(16.dp),
     ) {
         Column {
             Text(
-                text = "Hourly forecast",
-                modifier = Modifier.padding(bottom = 4.dp),
+                text = stringResource(R.string.hourly_forecast),
+                modifier = Modifier.padding(bottom = 8.dp),
                 style = MaterialTheme.typography.titleLarge
             )
-            LazyRow {
-                items(forecast) { item ->
-                    ShortForecast(item, now, modifier = Modifier.padding(2.dp))
+            Surface(
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    items(forecast) { item ->
+                        ShortForecast(item, now, modifier = Modifier)
+                    }
                 }
             }
         }
@@ -120,15 +136,16 @@ fun ForecastedConditions(forecast: List<Conditions>) {
 
 @Composable
 private fun ShortForecast(
-    item: Conditions,
+    conditions: Conditions,
     now: LocalTime,
     modifier: Modifier = Modifier,
 ) {
-    val text = "%.0f°".format(item.wetBulbEstimate)
-    val guideline = Guideline.forConditions(item)
+    val text = "%.0f°".format(conditions.wetBulbEstimate)
+    val guideline = Guideline.forConditions(conditions)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
             .background(color = guideline.color)
             .padding(8.dp)
@@ -145,13 +162,13 @@ private fun ShortForecast(
         )
         Text(
             text = "%dh".format(
-                now.plusHours(item.offsetHours.toLong())
+                now.plusHours(conditions.offsetHours.toLong())
                     .get(ChronoField.HOUR_OF_DAY)
             ),
             style = MaterialTheme.typography.labelMedium.copy(
                 color = Color.Black
             ),
-            modifier = Modifier.padding(vertical = 4.dp)
+            modifier = Modifier.padding(top = 4.dp)
         )
     }
 }
@@ -159,7 +176,7 @@ private fun ShortForecast(
 @Composable
 private fun CurrentConditions(conditions: Conditions) {
     Text(
-        text = "Current web bulb temperature estimate near you",
+        text = stringResource(R.string.title_current_conditions),
         style = MaterialTheme.typography.titleLarge,
         textAlign = TextAlign.Center,
         modifier = Modifier
@@ -175,7 +192,7 @@ private fun CurrentConditions(conditions: Conditions) {
     val guideline = Guideline.forConditions(conditions)
 
     Text(
-        text = guideline.emoji() + " " + guideline.subheader() + " " + guideline.emoji(),
+        text = guideline.emoji() + " " + guideline.subHeader() + " " + guideline.emoji(),
         style = MaterialTheme.typography.titleMedium.copy(
             color = guideline.color,
             fontWeight = FontWeight.Bold
@@ -273,7 +290,7 @@ fun TempMeter(
             color = guideline.color,
             topLeft = Offset(
                 x = (size.width - measurement.size.width) / 2f,
-                y = (size.height + measurement.size.height) / 2f
+                y = (size.height - measurement.size.height) / 1.1f
             ),
         )
 

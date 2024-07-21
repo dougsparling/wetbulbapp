@@ -2,21 +2,22 @@ package dev.cyberdeck.wetbulbapp.dashboard
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import dev.cyberdeck.wetbulbapp.R
 import dev.cyberdeck.wetbulbapp.openmeteo.Conditions
 
 
 // https://www.wbgt.env.go.jp/en/wbgt.php
 // plus an entry for 35+ which is where you're pretty much gonna die
 enum class Guideline(
-    val color: Color,
     val range: OpenEndRange<Double>
 ) {
-    Safe(Color(0xff218cff), Double.NEGATIVE_INFINITY.rangeUntil(21.0)),
-    Caution(Color(0xffa0d2ff), 21.0.rangeUntil(25.0)),
-    Warning(Color(0xfffaf500), 25.0.rangeUntil(28.0)),
-    Severe(Color(0xffff9600), 28.0.rangeUntil(31.0)),
-    Danger(Color(0xffff2800), 31.0.rangeUntil(35.0)),
-    Death(Color(0xFF000000), 35.0.rangeUntil(Double.POSITIVE_INFINITY));
+    Safe(Double.NEGATIVE_INFINITY.rangeUntil(21.0)),
+    Caution(21.0.rangeUntil(25.0)),
+    Warning(25.0.rangeUntil(28.0)),
+    Severe(28.0.rangeUntil(31.0)),
+    Danger(31.0.rangeUntil(35.0)),
+    Death(35.0.rangeUntil(Double.POSITIVE_INFINITY));
 
     companion object {
         fun forConditions(conditions: Conditions): Guideline {
@@ -26,25 +27,33 @@ enum class Guideline(
     }
 }
 
-
-@Composable
-fun Guideline.description() = when (this) {
-    Guideline.Safe -> "Generally safe at any activity level."
-    Guideline.Caution -> "Prolonged periods of exercise should be accompanied by adequate replenishment of water."
-    Guideline.Warning -> "Risk of heatstroke begins, rest periods should be taken every 30 minutes when performing heavy exercise."
-    Guideline.Severe -> "Heavy exercise should be avoided, and both rest and water should be taken aggressively."
-    Guideline.Danger -> "Approaching upper limit of survivability, avoid all exertion."
-    Guideline.Death -> "Regardless of fitness levels, exposure leads to certain death within hours."
+val Guideline.color get() = when (this) {
+    Guideline.Safe -> Color(0xff6ba833)
+    Guideline.Caution -> Color(0xffa0d2ff)
+    Guideline.Warning -> Color(0xfffaf500)
+    Guideline.Severe -> Color(0xffff9600)
+    Guideline.Danger -> Color(0xffff2800)
+    Guideline.Death -> Color(0xFF000000)
 }
 
 @Composable
-fun Guideline.subheader() = when (this) {
-    Guideline.Safe -> "Safe"
-    Guideline.Caution -> "Caution"
-    Guideline.Warning -> "Warning️"
-    Guideline.Severe -> "Severe"
-    Guideline.Danger -> "Danger"
-    Guideline.Death -> "Death"
+fun Guideline.description() = when (this) {
+    Guideline.Safe -> stringResource(R.string.guideline_desc_safe)
+    Guideline.Caution -> stringResource(R.string.guideline_desc_caution)
+    Guideline.Warning -> stringResource(R.string.guideline_desc_warning)
+    Guideline.Severe -> stringResource(R.string.guideline_desc_severe)
+    Guideline.Danger -> stringResource(R.string.guideline_desc_danger)
+    Guideline.Death -> stringResource(R.string.guideline_desc_death)
+}
+
+@Composable
+fun Guideline.subHeader() = when (this) {
+    Guideline.Safe -> stringResource(R.string.guideline_title_safe)
+    Guideline.Caution -> stringResource(R.string.guideline_title_caution)
+    Guideline.Warning -> stringResource(R.string.guideline_title_warning)
+    Guideline.Severe -> stringResource(R.string.guideline_title_severe)
+    Guideline.Danger -> stringResource(R.string.guideline_title_danger)
+    Guideline.Death -> stringResource(R.string.guideline_title_death)
 }
 
 @Composable

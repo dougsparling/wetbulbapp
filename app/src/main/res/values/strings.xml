@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">Wet Bulb App</string>
+    <string name="need_location_permission">Location permission is required to fetch the forecast nearest to you. Please go into settings and grant it, then pull down to refresh.</string>
+    <string name="hourly_forecast">Hourly forecast</string>
+    <string name="title_current_conditions">Current web bulb temperature estimate based on your location</string>
+    <string name="guideline_desc_safe">Generally safe at any activity level.</string>
+    <string name="guideline_desc_caution">Prolonged periods of exercise should be accompanied by adequate replenishment of water.</string>
+    <string name="guideline_desc_warning">Risk of heatstroke begins, rest periods should be taken every 30 minutes when performing heavy exercise.</string>
+    <string name="guideline_desc_severe">Heavy exercise should be avoided, and both rest and water should be taken aggressively.</string>
+    <string name="guideline_desc_danger">Approaching upper limit of survivability, avoid all exertion.</string>
+    <string name="guideline_desc_death">Regardless of fitness levels, exposure leads to certain death within hours.</string>
+    <string name="guideline_title_safe">Safe</string>
+    <string name="guideline_title_caution">Caution</string>
+    <string name="guideline_title_warning">Warning️</string>
+    <string name="guideline_title_severe">Severe</string>
+    <string name="guideline_title_danger">Danger</string>
+    <string name="guideline_title_death">Death</string>
 </resources>
