@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,15 +79,63 @@ fun DashboardScreen(
                     }
 
                     is DashboardViewModel.State.Ready -> {
-                        TempMeter(
-                            modifier = Modifier.fillMaxWidth(),
-                            conditions = state.conditions
-                        )
+                        CurrentConditions(state.conditions)
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun CurrentConditions(conditions: Conditions) {
+    Text(
+        text = "Web bulb temperature estimate near you",
+        style = MaterialTheme.typography.titleMedium,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    )
+
+    TempMeter(
+        modifier = Modifier.fillMaxWidth(),
+        conditions = conditions
+    )
+
+    val subHeader = when (Guideline.forConditions(conditions)) {
+        Guideline.Safe -> "Safe ✅"
+        Guideline.Caution -> "Caution ☀️"
+        Guideline.Warning -> "Warning ⚠️️"
+        Guideline.Severe -> "Severe ‼️"
+        Guideline.Danger -> "Danger ☠️"
+        Guideline.Death -> "Death 🪦"
+    }
+
+    Text(
+        text = subHeader,
+        style = MaterialTheme.typography.titleMedium,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+    )
+
+    val description = when (Guideline.forConditions(conditions)) {
+        Guideline.Safe -> "Generally safe at any activity level."
+        Guideline.Caution -> "Prolonged periods of exercise should be accompanied by adequate replenishment of water."
+        Guideline.Warning -> "Danger of heatstroke begins, rest periods should be taken every 30 minutes when performing heavy exercise."
+        Guideline.Severe -> "Heavy exercise should be avoided, and rest and water should be taken aggressively."
+        Guideline.Danger -> "Avoid all exertion as body heat cannot escape."
+        Guideline.Death -> "Regardless of fitness levels, death is a certainty within hours."
+    }
+
+    Text(
+        text = description,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier
+            .wrapContentSize()
+            .padding(16.dp)
+    )
 }
 
 @Composable
@@ -206,11 +256,10 @@ enum class Guideline(
 
 @Preview
 @Composable
-fun TempMeterPreview() {
-    TempMeter(
-        conditions = Conditions(temperature = 26.0, humidity = 80.0, wind = 5.0),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    )
+fun CurrentConditionsPreview() {
+    Column {
+        CurrentConditions(
+            conditions = Conditions(temperature = 26.0, humidity = 80.0, wind = 5.0),
+        )
+    }
 }

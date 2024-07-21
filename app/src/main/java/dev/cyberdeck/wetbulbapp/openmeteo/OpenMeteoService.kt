@@ -42,7 +42,7 @@ data class Conditions(
      * https://journals.ametsoc.org/view/journals/apme/50/11/jamc-d-11-0143.1.xml
      *
      * T. = T atan[0.151 977(RH% + 8.313 659) 121 + atan(T + RH%) - atan(RH% - 1.676331)
-     * + 0.003 918 38(RH%)32 atan(0.023 101RH%) - 4.686 035.
+     *      + 0.003 918 38(RH%)32 atan(0.023 101RH%) - 4.686 035.
      *
      * TODO: might be nice to find a regression that uses wind speed as well
      */
