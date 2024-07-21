@@ -1,12 +1,15 @@
 package dev.cyberdeck.wetbulbapp.dashboard
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,11 +22,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,6 +40,8 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import dev.cyberdeck.wetbulbapp.openmeteo.Conditions
+import java.time.LocalTime
+import java.time.temporal.ChronoField
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
@@ -80,6 +87,7 @@ fun DashboardScreen(
 
                     is DashboardViewModel.State.Ready -> {
                         CurrentConditions(state.conditions)
+                        ForecastedConditions(state.forecast)
                     }
                 }
             }
@@ -88,10 +96,71 @@ fun DashboardScreen(
 }
 
 @Composable
+fun ForecastedConditions(forecast: List<Conditions>) {
+    val now = LocalTime.now()
+    Surface(
+        tonalElevation = 4.dp,
+        shadowElevation = 2.dp,
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Column {
+            Text(
+                text = "Hourly forecast",
+                modifier = Modifier.padding(bottom = 4.dp),
+                style = MaterialTheme.typography.titleLarge
+            )
+            LazyRow {
+                items(forecast) { item ->
+                    ShortForecast(item, now, modifier = Modifier.padding(2.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShortForecast(
+    item: Conditions,
+    now: LocalTime,
+    modifier: Modifier = Modifier,
+) {
+    val text = "%.0f°".format(item.wetBulbEstimate)
+    val guideline = Guideline.forConditions(item)
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .background(color = guideline.color)
+            .padding(8.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleLarge.copy(
+                color = Color.Black
+            )
+        )
+        Text(
+            text = guideline.emoji(),
+            style = MaterialTheme.typography.titleLarge
+        )
+        Text(
+            text = "%dh".format(
+                now.plusHours(item.offsetHours.toLong())
+                    .get(ChronoField.HOUR_OF_DAY)
+            ),
+            style = MaterialTheme.typography.labelMedium.copy(
+                color = Color.Black
+            ),
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+    }
+}
+
+@Composable
 private fun CurrentConditions(conditions: Conditions) {
     Text(
-        text = "Web bulb temperature estimate near you",
-        style = MaterialTheme.typography.titleMedium,
+        text = "Current web bulb temperature estimate near you",
+        style = MaterialTheme.typography.titleLarge,
         textAlign = TextAlign.Center,
         modifier = Modifier
             .fillMaxWidth()
@@ -103,40 +172,29 @@ private fun CurrentConditions(conditions: Conditions) {
         conditions = conditions
     )
 
-    val subHeader = when (Guideline.forConditions(conditions)) {
-        Guideline.Safe -> "Safe ✅"
-        Guideline.Caution -> "Caution ☀️"
-        Guideline.Warning -> "Warning ⚠️️"
-        Guideline.Severe -> "Severe ‼️"
-        Guideline.Danger -> "Danger ☠️"
-        Guideline.Death -> "Death 🪦"
-    }
+    val guideline = Guideline.forConditions(conditions)
 
     Text(
-        text = subHeader,
-        style = MaterialTheme.typography.titleMedium,
+        text = guideline.emoji() + " " + guideline.subheader() + " " + guideline.emoji(),
+        style = MaterialTheme.typography.titleMedium.copy(
+            color = guideline.color,
+            fontWeight = FontWeight.Bold
+        ),
         textAlign = TextAlign.Center,
         modifier = Modifier
             .fillMaxWidth()
+            .padding(bottom = 4.dp)
     )
 
-    val description = when (Guideline.forConditions(conditions)) {
-        Guideline.Safe -> "Generally safe at any activity level."
-        Guideline.Caution -> "Prolonged periods of exercise should be accompanied by adequate replenishment of water."
-        Guideline.Warning -> "Danger of heatstroke begins, rest periods should be taken every 30 minutes when performing heavy exercise."
-        Guideline.Severe -> "Heavy exercise should be avoided, and rest and water should be taken aggressively."
-        Guideline.Danger -> "Avoid all exertion as body heat cannot escape."
-        Guideline.Death -> "Regardless of fitness levels, death is a certainty within hours."
-    }
-
     Text(
-        text = description,
+        text = guideline.description(),
         style = MaterialTheme.typography.bodyMedium,
         modifier = Modifier
             .wrapContentSize()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
     )
 }
+
 
 @Composable
 fun TempMeter(
@@ -218,6 +276,7 @@ fun TempMeter(
                 y = (size.height + measurement.size.height) / 2f
             ),
         )
+
     }
 }
 
@@ -233,27 +292,6 @@ private fun pointOnCircle(
     return Offset(x, y)
 }
 
-// https://www.wbgt.env.go.jp/en/wbgt.php
-// plus an entry for 35+ which is where you're pretty much gonna die
-enum class Guideline(
-    val color: Color,
-    val range: OpenEndRange<Double>
-) {
-    Safe(Color(0xff218cff), Double.NEGATIVE_INFINITY.rangeUntil(21.0)),
-    Caution(Color(0xffa0d2ff), 21.0.rangeUntil(25.0)),
-    Warning(Color(0xfffaf500), 25.0.rangeUntil(28.0)),
-    Severe(Color(0xffff9600), 28.0.rangeUntil(31.0)),
-    Danger(Color(0xffff2800), 31.0.rangeUntil(35.0)),
-    Death(Color(0xFF000000), 35.0.rangeUntil(Double.POSITIVE_INFINITY));
-
-    companion object {
-        fun forConditions(conditions: Conditions): Guideline {
-            val webBulb = conditions.wetBulbEstimate
-            return entries.find { webBulb in it.range }!!
-        }
-    }
-}
-
 @Preview
 @Composable
 fun CurrentConditionsPreview() {
@@ -261,5 +299,21 @@ fun CurrentConditionsPreview() {
         CurrentConditions(
             conditions = Conditions(temperature = 26.0, humidity = 80.0, wind = 5.0),
         )
+    }
+}
+
+@Preview
+@Composable
+fun ForecastedConditionsPreview() {
+    Column {
+        val forecast = (24 until 48).mapIndexed { index, temp ->
+            Conditions(
+                temperature = temp.toDouble(),
+                humidity = 50.0 + temp,
+                wind = 5.0,
+                offsetHours = index + 1
+            )
+        }
+        ForecastedConditions(forecast = forecast)
     }
 }

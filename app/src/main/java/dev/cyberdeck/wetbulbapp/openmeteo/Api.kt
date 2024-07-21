@@ -14,13 +14,15 @@ interface Api {
         @Query("latitude") latitude: Double,
         @Query("longitude") longitude: Double,
         @Query("current") current: String = "temperature_2m,wind_speed_10m,relative_humidity_2m",
-        @Query("hourly") hourly: String? = null
+        @Query("hourly") hourly: String? = "temperature_2m,wind_speed_10m,relative_humidity_2m",
+        @Query("forecast_days") days: Int? = 1
     ): Response<Result>
 }
 
 data class Result(
     val current: Current?,
-    val hourly: Forecast?
+    val hourly: Hourly?,
+    val utc_offset_seconds: Int
 )
 
 // TODO: nasty
@@ -32,7 +34,7 @@ data class Current(
 
 
 // TODO: nasty
-data class Forecast(
+data class Hourly(
     val time: List<String>,
     val temperature_2m: List<Double>,
     val wind_speed_10m: List<Double>,

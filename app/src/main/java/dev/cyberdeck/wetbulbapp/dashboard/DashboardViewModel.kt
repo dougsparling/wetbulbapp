@@ -10,8 +10,6 @@ import dev.cyberdeck.wetbulbapp.openmeteo.OpenMeteoService
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.getAndUpdate
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
 import kotlin.coroutines.resume
@@ -34,14 +32,13 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         if (!_refreshing.compareAndSet(expect = false, update = true)) return
 
         viewModelScope.launch {
-            // TODO: errors
             val location = runCatching { queryLocation() }.getOrElse {
                 it.printStackTrace()
                 _state.value = State.NoLocation
                 return@launch
             }
 
-            val conditions = runCatching { service.current(location) }.getOrElse {
+            val forecast = runCatching { service.forecast(location) }.getOrElse {
                 it.printStackTrace()
                 _state.value = State.Empty // TODO: error state?
                 return@launch
@@ -49,7 +46,8 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
 
             _state.value = State.Ready(
                 updatedAt = Instant.now(),
-                conditions = conditions
+                conditions = forecast.current,
+                forecast = forecast.forecast
             )
         }.invokeOnCompletion {
             _refreshing.value = false
@@ -81,7 +79,8 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
         data object NoLocation: State
         data class Ready(
             val updatedAt: Instant,
-            val conditions: Conditions
+            val conditions: Conditions,
+            val forecast: List<Conditions>
         ) : State
     }
 

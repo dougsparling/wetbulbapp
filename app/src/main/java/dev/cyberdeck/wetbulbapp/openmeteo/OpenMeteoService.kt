@@ -2,19 +2,44 @@ package dev.cyberdeck.wetbulbapp.openmeteo
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import kotlin.math.atan
 import kotlin.math.pow
 
 class OpenMeteoService {
 
-    suspend fun current(location: Location): Conditions {
-        val res = api.forecast(location.lat, location.long)
-        val body = res.body()
-        require(res.isSuccessful && body != null && body.current != null) { "no current weather @ $location"}
-        return Conditions(
-            temperature = body.current.temperature_2m,
-            humidity = body.current.relative_humidity_2m,
-            wind = body.current.wind_speed_10m
+    suspend fun forecast(location: Location): Forecast {
+        val res = api.forecast(location.lat, location.long, days = 2)
+
+        val current = res.takeIf { it.isSuccessful }?.body()?.current
+            ?: error("no current weather @ $location")
+        val now = Instant.now()
+        val offset = ZoneOffset.ofTotalSeconds(res.body()!!.utc_offset_seconds)
+
+        return Forecast(
+            current = Conditions(
+                temperature = current.temperature_2m,
+                humidity = current.relative_humidity_2m,
+                wind = current.wind_speed_10m
+            ),
+            forecast = res.body()?.hourly?.let { hourly ->
+                hourly.time
+                    .mapIndexed { index, time ->
+                        val instant = LocalDateTime.parse(time).toInstant(offset)
+                        Conditions(
+                            temperature = hourly.temperature_2m[index],
+                            humidity = hourly.relative_humidity_2m[index],
+                            wind = hourly.wind_speed_10m[index],
+                            offsetHours = now.until(instant, ChronoUnit.HOURS).toInt()
+                        )
+                    }
+                    .filter { it.offsetHours > 0 }
+                    .sortedBy { it.offsetHours }
+                    .take(24)
+            } ?: emptyList()
         )
     }
 
@@ -32,10 +57,16 @@ data class Location(
     val long: Double
 )
 
+data class Forecast(
+    val current: Conditions,
+    val forecast: List<Conditions>
+)
+
 data class Conditions(
     val temperature: Double,
     val humidity: Double,
-    val wind: Double
+    val wind: Double,
+    val offsetHours: Int = 0
 ) {
     /**
      * Estimates wet-bulb temperature using the regression described here:
