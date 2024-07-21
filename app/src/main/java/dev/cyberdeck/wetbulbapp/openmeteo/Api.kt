@@ -7,7 +7,8 @@ import retrofit2.http.Query
 
 // https://open-meteo.com/en/docs
 interface Api {
-    // ex: https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m
+    // example query:
+    // https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m
     @GET("v1/forecast")
     @Headers("Content-Type: application/json")
     suspend fun forecast(
@@ -20,7 +21,7 @@ interface Api {
 }
 
 data class Result(
-    val current: Current?,
+    val current: Current,
     val hourly: Hourly?,
     val utc_offset_seconds: Int
 )

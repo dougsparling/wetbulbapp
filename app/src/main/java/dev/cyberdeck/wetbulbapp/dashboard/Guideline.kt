@@ -7,8 +7,12 @@ import dev.cyberdeck.wetbulbapp.R
 import dev.cyberdeck.wetbulbapp.openmeteo.Conditions
 
 
-// https://www.wbgt.env.go.jp/en/wbgt.php
-// plus an entry for 35+ which is where you're pretty much gonna die
+/**
+ * Guidelines on relative safety of different wet bulb temperature ranges:
+ * https://www.wbgt.env.go.jp/en/wbgt.php
+ *
+ * Plus an entry for 35C+ which is where you're pretty much gonna die.
+ */
 enum class Guideline(
     val range: OpenEndRange<Double>
 ) {
