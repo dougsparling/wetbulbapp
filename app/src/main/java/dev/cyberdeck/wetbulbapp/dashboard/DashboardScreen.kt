@@ -10,12 +10,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionStatus
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
+import dev.cyberdeck.wetbulbapp.openmeteo.Location
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun DashboardScreen(
     modifier: Modifier,
@@ -23,12 +30,23 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.state.collectAsState()
 
-    val temp = when (val state = uiState) {
+    val wetBulb = when (val state = uiState) {
         DashboardViewModel.State.Empty -> "--"
-        is DashboardViewModel.State.Ready -> "%.1f%n".format(state.conditions.temperature)
+        DashboardViewModel.State.NoLocation -> "need location" // TODO
+        is DashboardViewModel.State.Ready -> "%.1f%n".format(state.conditions.wetBulbEstimate)
     }
 
     val refreshing by viewModel.refreshing.collectAsState()
+
+    val locationPermissionState = rememberPermissionState(
+        android.Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+
+    LaunchedEffect(locationPermissionState.status) {
+        if (locationPermissionState.status.isGranted) {
+            viewModel.refresh()
+        }
+    }
 
     Surface(modifier = modifier) {
         PullToRefreshBox(
@@ -41,7 +59,7 @@ fun DashboardScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = temp,
+                    text = wetBulb,
                     style = MaterialTheme.typography.headlineLarge
                 )
             }
