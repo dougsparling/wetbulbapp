@@ -1,10 +1,8 @@
 package dev.cyberdeck.wetbulbapp.dashboard
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,18 +24,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.math.MathUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -47,10 +39,6 @@ import dev.cyberdeck.wetbulbapp.openmeteo.Conditions
 import dev.cyberdeck.wetbulbapp.openmeteo.TestData
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.math.cos
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -125,75 +113,6 @@ fun DashboardScreen(
 }
 
 @Composable
-fun ForecastedConditions(forecast: List<Conditions>) {
-    val now = LocalDateTime.now()
-    Surface(
-        tonalElevation = 4.dp,
-        shadowElevation = 2.dp,
-        modifier = Modifier.padding(16.dp),
-    ) {
-        Column {
-            Text(
-                text = stringResource(R.string.hourly_forecast),
-                modifier = Modifier.padding(bottom = 8.dp),
-                style = MaterialTheme.typography.titleLarge
-            )
-            Surface(
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(0.dp)
-                ) {
-                    items(forecast) { item ->
-                        ShortForecast(item, now, modifier = Modifier)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ShortForecast(
-    conditions: Conditions,
-    now: LocalDateTime,
-    modifier: Modifier = Modifier,
-) {
-    val text = "%.0f°".format(conditions.wetBulbEstimate) // half-even rounding mode
-    val guideline = Guideline.forConditions(conditions)
-    val timeFormatter = remember { DateTimeFormatter.ofPattern("k'h'") }
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
-            .background(color = guideline.color)
-            .padding(8.dp)
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleLarge.copy(
-                color = Color.Black
-            )
-        )
-        Text(
-            text = guideline.emoji(),
-            style = MaterialTheme.typography.titleLarge
-        )
-        Text(
-            text = when {
-                conditions.time.isBefore(now) -> stringResource(id = R.string.now)
-                else -> timeFormatter.format(conditions.time)
-            },
-            style = MaterialTheme.typography.labelMedium.copy(
-                color = Color.Black
-            ),
-            modifier = Modifier.padding(top = 4.dp)
-        )
-    }
-}
-
-@Composable
 private fun CurrentConditions(
     conditions: Conditions
 ) {
@@ -225,100 +144,73 @@ private fun CurrentConditions(
     )
 }
 
-
 @Composable
-fun TempMeter(
-    conditions: Conditions,
-    modifier: Modifier = Modifier,
-) {
-    val guideline = Guideline.forConditions(conditions)
-    val estimate = remember(conditions) { conditions.wetBulbEstimate }
-    val textMeasurer = rememberTextMeasurer()
-    val headline = MaterialTheme.typography.headlineLarge
-    val measurement = remember(estimate) {
-        textMeasurer.measure(
-            text = "%.1f° C".format(estimate),
-            softWrap = false,
-            style = headline.copy(
-                color = guideline.color,
-                fontSize = 64.sp
-            )
-        )
-    }
-
-    // drawing counter-clockwise (negative sweep) from starting angle with entire meter occupying arc number of degrees
-    val initialAngle = -180f
-    val arc = 180f
-
-    val minTemp = Guideline.Safe.range.endExclusive - 1.0
-    val maxTemp = Guideline.Death.range.start + 1.0
-    val tempRange = maxTemp - minTemp
-
-    Canvas(
-        modifier = modifier
-            .padding(32.dp)
-            .aspectRatio(1.0f)
+fun ForecastedConditions(forecast: List<Conditions>) {
+    Surface(
+        tonalElevation = 4.dp,
+        shadowElevation = 2.dp,
+        modifier = Modifier.padding(16.dp),
     ) {
-        val ringThickness = 25.0.dp.toPx()
-        val indicatorThickness = 12.dp.toPx()
-
-        Guideline.entries.forEach { guideline ->
-            val tempStart = max(minTemp, guideline.range.start)
-            val tempEnd = min(guideline.range.endExclusive, maxTemp)
-
-            val startPos = (tempStart - minTemp) / tempRange
-            val endPos = (tempEnd - minTemp) / tempRange
-
-            val startAngle = initialAngle + startPos * arc
-            val sweepAngle = arc * (endPos - startPos)
-
-            drawArc(
-                color = guideline.color,
-                startAngle = startAngle.toFloat(),
-                sweepAngle = sweepAngle.toFloat(),
-                useCenter = false,
-                style = Stroke(width = ringThickness)
+        Column {
+            Text(
+                text = stringResource(R.string.hourly_forecast),
+                modifier = Modifier.padding(bottom = 8.dp),
+                style = MaterialTheme.typography.titleLarge
             )
+            Surface(
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    val now = LocalDateTime.now()
+                    items(forecast) { item ->
+                        ShortForecast(item, now, modifier = Modifier)
+                    }
+                }
+            }
         }
-
-        val conditionsPos =
-            (MathUtils.clamp(estimate, minTemp, maxTemp) - minTemp) / tempRange
-        val conditionAngle = initialAngle + conditionsPos * arc
-
-        drawLine(
-            color = guideline.color,
-            start = center,
-            end = pointOnCircle(
-                -conditionAngle + 90,
-                (size.height / 2.0f) - ringThickness,
-                center.x,
-                center.y
-            ),
-            strokeWidth = indicatorThickness
-        )
-
-        drawText(
-            textLayoutResult = measurement,
-            color = guideline.color,
-            topLeft = Offset(
-                x = (size.width - measurement.size.width) / 2f,
-                y = (size.height - measurement.size.height) / 1.1f
-            ),
-        )
-
     }
 }
 
-private fun pointOnCircle(
-    thetaInDegrees: Double,
-    radius: Float,
-    cX: Float,
-    cY: Float,
-): Offset {
-    val x = cX + (radius * sin(Math.toRadians(thetaInDegrees)).toFloat())
-    val y = cY + (radius * cos(Math.toRadians(thetaInDegrees)).toFloat())
+@Composable
+private fun ShortForecast(
+    conditions: Conditions,
+    now: LocalDateTime,
+    modifier: Modifier = Modifier,
+) {
+    val text = "%.1f°".format(conditions.wetBulbEstimate) // half-even rounding mode
+    val guideline = Guideline.forConditions(conditions)
+    val timeFormatter = remember { DateTimeFormatter.ofPattern("k'h'") }
 
-    return Offset(x, y)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+            .background(color = guideline.color)
+            .padding(8.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleLarge.copy(
+                color = Color.Black
+            )
+        )
+        Text(
+            text = guideline.emoji(),
+            style = MaterialTheme.typography.titleLarge
+        )
+        Text(
+            text = when {
+                conditions.time.isBefore(now) -> stringResource(id = R.string.now)
+                else -> timeFormatter.format(conditions.time)
+            },
+            style = MaterialTheme.typography.labelMedium.copy(
+                color = Color.Black
+            ),
+            modifier = Modifier.padding(top = 4.dp)
+        )
+    }
 }
 
 @Preview
