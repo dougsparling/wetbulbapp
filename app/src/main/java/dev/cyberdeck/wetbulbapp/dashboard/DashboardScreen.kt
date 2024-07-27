@@ -44,6 +44,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import dev.cyberdeck.wetbulbapp.R
 import dev.cyberdeck.wetbulbapp.openmeteo.Conditions
+import dev.cyberdeck.wetbulbapp.openmeteo.TestData
 import java.time.LocalTime
 import java.time.temporal.ChronoField
 import kotlin.math.cos
@@ -96,6 +97,24 @@ fun DashboardScreen(
                     }
 
                     is DashboardViewModel.State.Ready -> {
+                        Text(
+                            text = stringResource(R.string.title_current_conditions),
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                        )
+                        LocationEditor(
+                            location = state.location,
+                            modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
+                            provideSuggestions = { text ->
+                                viewModel.findLocations(text)
+                            },
+                            onLocationChange = { loc ->
+                                viewModel.refresh(at = loc)
+                            }
+                        )
                         CurrentConditions(state.conditions)
                         ForecastedConditions(state.forecast)
                     }
@@ -174,16 +193,9 @@ private fun ShortForecast(
 }
 
 @Composable
-private fun CurrentConditions(conditions: Conditions) {
-    Text(
-        text = stringResource(R.string.title_current_conditions),
-        style = MaterialTheme.typography.titleLarge,
-        textAlign = TextAlign.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-    )
-
+private fun CurrentConditions(
+    conditions: Conditions
+) {
     TempMeter(
         modifier = Modifier.fillMaxWidth(),
         conditions = conditions
@@ -219,13 +231,12 @@ fun TempMeter(
     modifier: Modifier = Modifier,
 ) {
     val guideline = Guideline.forConditions(conditions)
-
+    val estimate = remember(conditions) { conditions.wetBulbEstimate }
     val textMeasurer = rememberTextMeasurer()
-    val tempString = "%.1f° C".format(conditions.wetBulbEstimate)
     val headline = MaterialTheme.typography.headlineLarge
-    val measurement = remember {
+    val measurement = remember(estimate) {
         textMeasurer.measure(
-            text = tempString,
+            text = "%.1f° C".format(estimate),
             softWrap = false,
             style = headline.copy(
                 color = guideline.color,
@@ -270,7 +281,7 @@ fun TempMeter(
         }
 
         val conditionsPos =
-            (MathUtils.clamp(conditions.wetBulbEstimate, minTemp, maxTemp) - minTemp) / tempRange
+            (MathUtils.clamp(estimate, minTemp, maxTemp) - minTemp) / tempRange
         val conditionAngle = initialAngle + conditionsPos * arc
 
         drawLine(
@@ -314,7 +325,7 @@ private fun pointOnCircle(
 fun CurrentConditionsPreview() {
     Column {
         CurrentConditions(
-            conditions = Conditions(temperature = 26.0, humidity = 80.0, wind = 5.0),
+            conditions = TestData.increasingTemps.first(),
         )
     }
 }
@@ -323,14 +334,7 @@ fun CurrentConditionsPreview() {
 @Composable
 fun ForecastedConditionsPreview() {
     Column {
-        val forecast = (24 until 48).mapIndexed { index, temp ->
-            Conditions(
-                temperature = temp.toDouble(),
-                humidity = 50.0 + temp,
-                wind = 5.0,
-                offsetHours = index + 1
-            )
-        }
+        val forecast = TestData.increasingTemps
         ForecastedConditions(forecast = forecast)
     }
 }

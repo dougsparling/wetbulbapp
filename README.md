@@ -24,7 +24,8 @@ There are limitations, such as only being valid between -20 and +50 celcius and 
 
 Most don't display wet bulb temperature, which is increasingly relevant as global warming continues.
 
-Those few apps that do display it, are either bloatware, iOS-only, require login, or are monitized. This app is simple, free, runs on 95% of Android devices and doesn't track users or require a login.
+Those few apps that do display it, are either bloatware, iOS-only, require login, or are monetized.
+This app is simple, free, runs on 95% of Android devices and doesn't track users or require a login.
 
 Besides, I was bored on a weekend where, not surprisingly, it was too hot to go outside.
 
@@ -35,5 +36,5 @@ Some nice features might be:
 * notifications if temperatures are expected to cross into dangerous thresholds
 * multi-day forecasts
 * a widget that could be put on the home screen
-* allowing users to manually enter their location or even save and page through multiple locations
+* save and page through multiple locations
 * a UI that isn't awful

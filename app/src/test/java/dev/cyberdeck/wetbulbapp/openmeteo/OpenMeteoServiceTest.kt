@@ -9,12 +9,7 @@ class OpenMeteoServiceTest {
     @Test
     fun testShibuya() = runBlocking {
         val service = OpenMeteoService()
-        val res = service.forecast(
-            Location(
-                lat = 35.661777,
-                long = 139.704056
-            )
-        )
+        val res = service.forecast(TestData.shibuya)
         val current = res.current
         assertTrue(current.temperature > -10)
         assertTrue(current.temperature < 50)

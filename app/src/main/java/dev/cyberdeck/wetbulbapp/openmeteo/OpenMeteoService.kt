@@ -53,6 +53,7 @@ class OpenMeteoService {
 }
 
 data class Location(
+    val name: String,
     val lat: Double,
     val long: Double
 )
@@ -86,4 +87,37 @@ data class Conditions(
 
         term1 + term2 - term3 + term4 - term5
     }
+}
+
+object TestData {
+    val increasingTemps = (24 until 48).mapIndexed { index, temp ->
+        Conditions(
+            temperature = temp.toDouble(),
+            humidity = 50.0 + temp,
+            wind = 5.0,
+            offsetHours = index + 1
+        )
+    }
+
+    val shibuya = Location(
+        name = "Shibuya",
+        lat = 35.661777,
+        long = 139.704056
+    )
+
+    val winnipeg = Location(
+        name = "Winnipeg",
+        lat = 49.895138,
+        long = -97.138374
+    )
+
+    val vancouver = Location(
+        name = "Vancouver",
+        lat = 49.282730,
+        long = -123.120735
+    )
+
+    val locations = listOf(
+        shibuya, winnipeg, vancouver
+    )
 }
