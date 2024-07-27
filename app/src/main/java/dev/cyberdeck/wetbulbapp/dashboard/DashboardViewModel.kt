@@ -35,7 +35,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     private val _refreshing = MutableStateFlow(false)
     val refreshing = _refreshing.asStateFlow()
 
-    private val _state: MutableStateFlow<State> = MutableStateFlow(State.Empty)
+    private val _state: MutableStateFlow<State> = MutableStateFlow(State.Initial)
     val state = _state.asStateFlow()
 
     private var locationSearchJob: Job? = null
@@ -53,7 +53,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
 
             val forecast = runCatching { service.forecast(location) }.getOrElse {
                 it.printStackTrace()
-                _state.value = State.Empty // TODO: error state?
+                _state.value = State.Initial // TODO: error state?
                 return@launch
             }
 
@@ -119,8 +119,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
                 results
                     .map { result ->
                         Location(
-                            name = result.locality ?: result.subAdminArea ?: result?.adminArea
-                            ?: result?.postalCode ?: "",
+                            name = result.locality ?: result.subAdminArea ?: result?.adminArea ?: result?.postalCode ?: text,
                             lat = result.latitude,
                             long = result.longitude
                         )
@@ -138,7 +137,7 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     sealed interface State {
-        data object Empty : State
+        data object Initial : State
         data object NoLocation : State
         data class Ready(
             val location: Location,

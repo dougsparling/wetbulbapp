@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Wet Bulb App</string>
-    <string name="need_location_permission">Location permission is required to fetch the forecast nearest to you. Please go into settings and grant it, then pull down to refresh.</string>
+    <string name="need_location_permission">Your current location is required to fetch the forecast nearest to you. You can either grant location permission to the app under system settings, or enter a location below.</string>
     <string name="hourly_forecast">Hourly forecast</string>
     <string name="title_current_conditions">Web bulb temp at</string>
     <string name="guideline_desc_safe">Generally safe at any activity level.</string>

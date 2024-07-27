@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import dev.cyberdeck.wetbulbapp.R
 import dev.cyberdeck.wetbulbapp.openmeteo.Conditions
 import dev.cyberdeck.wetbulbapp.openmeteo.TestData
@@ -54,7 +55,7 @@ fun DashboardScreen(
     )
 
     LaunchedEffect(locationPermissionState.status) {
-        if (locationPermissionState.status.isGranted) {
+        if (locationPermissionState.status.isGranted || !locationPermissionState.status.shouldShowRationale) {
             viewModel.refresh()
         } else {
             locationPermissionState.launchPermissionRequest()
@@ -72,15 +73,26 @@ fun DashboardScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 when (val state = uiState) {
-                    DashboardViewModel.State.Empty -> {
-
+                    DashboardViewModel.State.Initial -> {
+                        // either prompting for permission or refreshing
                     }
 
                     DashboardViewModel.State.NoLocation -> {
                         Text(
                             text = stringResource(R.string.need_location_permission),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(16.dp)
+                        )
+
+                        LocationEditor(
+                            location = null,
+                            modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
+                            provideSuggestions = { text ->
+                                viewModel.findLocations(text)
+                            },
+                            onLocationChange = { loc ->
+                                viewModel.refresh(at = loc)
+                            }
                         )
                     }
 
