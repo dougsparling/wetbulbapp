@@ -5,7 +5,11 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAmount
+import java.time.temporal.TemporalField
+import java.time.temporal.TemporalUnit
 import kotlin.math.atan
 import kotlin.math.pow
 
@@ -16,28 +20,29 @@ class OpenMeteoService {
 
         val current = res.takeIf { it.isSuccessful }?.body()?.current
             ?: error("no current weather @ $location")
-        val now = Instant.now()
-        val offset = ZoneOffset.ofTotalSeconds(res.body()!!.utc_offset_seconds)
+        val now = LocalDateTime.now()
 
         return Forecast(
             current = Conditions(
                 temperature = current.temperature_2m,
                 humidity = current.relative_humidity_2m,
-                wind = current.wind_speed_10m
+                wind = current.wind_speed_10m,
+                time = now,
             ),
             forecast = res.body()?.hourly?.let { hourly ->
                 hourly.time
                     .mapIndexed { index, time ->
-                        val instant = LocalDateTime.parse(time).toInstant(offset)
+                        // TODO: maybe use location local datetime?
+                        val instant = LocalDateTime.parse(time).atOffset(ZoneOffset.UTC).toLocalDateTime()
                         Conditions(
                             temperature = hourly.temperature_2m[index],
                             humidity = hourly.relative_humidity_2m[index],
                             wind = hourly.wind_speed_10m[index],
-                            offsetHours = now.until(instant, ChronoUnit.HOURS).toInt()
+                            time = instant
                         )
                     }
-                    .filter { it.offsetHours > 0 }
-                    .sortedBy { it.offsetHours }
+                    .filter { it.time.isAfter(now.minusHours(1)) }
+                    .sortedBy { it.time }
                     .take(24)
             } ?: emptyList()
         )
@@ -67,7 +72,7 @@ data class Conditions(
     val temperature: Double,
     val humidity: Double,
     val wind: Double,
-    val offsetHours: Int = 0
+    val time: LocalDateTime,
 ) {
     /**
      * Estimates wet-bulb temperature using the regression described here:
@@ -95,7 +100,7 @@ object TestData {
             temperature = temp.toDouble(),
             humidity = 50.0 + temp,
             wind = 5.0,
-            offsetHours = index + 1
+            time = LocalDateTime.now().plus(index.toLong(), ChronoUnit.HOURS)
         )
     }
 

@@ -16,4 +16,5 @@
     <string name="guideline_title_danger">Danger</string>
     <string name="guideline_title_death">Death</string>
     <string name="location">Location</string>
+    <string name="now">Now</string>
 </resources>

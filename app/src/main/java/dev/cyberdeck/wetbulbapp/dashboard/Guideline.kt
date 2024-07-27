@@ -37,7 +37,7 @@ val Guideline.color get() = when (this) {
     Guideline.Warning -> Color(0xfffaf500)
     Guideline.Severe -> Color(0xffff9600)
     Guideline.Danger -> Color(0xffff2800)
-    Guideline.Death -> Color(0xFF000000)
+    Guideline.Death -> Color(0xFF6E0099)
 }
 
 @Composable

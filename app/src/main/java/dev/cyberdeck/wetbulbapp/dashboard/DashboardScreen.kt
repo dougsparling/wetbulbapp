@@ -45,8 +45,8 @@ import com.google.accompanist.permissions.rememberPermissionState
 import dev.cyberdeck.wetbulbapp.R
 import dev.cyberdeck.wetbulbapp.openmeteo.Conditions
 import dev.cyberdeck.wetbulbapp.openmeteo.TestData
-import java.time.LocalTime
-import java.time.temporal.ChronoField
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
@@ -126,7 +126,7 @@ fun DashboardScreen(
 
 @Composable
 fun ForecastedConditions(forecast: List<Conditions>) {
-    val now = LocalTime.now()
+    val now = LocalDateTime.now()
     Surface(
         tonalElevation = 4.dp,
         shadowElevation = 2.dp,
@@ -156,11 +156,12 @@ fun ForecastedConditions(forecast: List<Conditions>) {
 @Composable
 private fun ShortForecast(
     conditions: Conditions,
-    now: LocalTime,
+    now: LocalDateTime,
     modifier: Modifier = Modifier,
 ) {
-    val text = "%.0f°".format(conditions.wetBulbEstimate)
+    val text = "%.0f°".format(conditions.wetBulbEstimate) // half-even rounding mode
     val guideline = Guideline.forConditions(conditions)
+    val timeFormatter = remember { DateTimeFormatter.ofPattern("k'h'") }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -180,10 +181,10 @@ private fun ShortForecast(
             style = MaterialTheme.typography.titleLarge
         )
         Text(
-            text = "%dh".format(
-                now.plusHours(conditions.offsetHours.toLong())
-                    .get(ChronoField.HOUR_OF_DAY)
-            ),
+            text = when {
+                conditions.time.isBefore(now) -> stringResource(id = R.string.now)
+                else -> timeFormatter.format(conditions.time)
+            },
             style = MaterialTheme.typography.labelMedium.copy(
                 color = Color.Black
             ),
