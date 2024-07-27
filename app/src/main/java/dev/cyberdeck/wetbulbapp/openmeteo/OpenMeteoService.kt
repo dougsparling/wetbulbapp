@@ -4,12 +4,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
-import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalAmount
-import java.time.temporal.TemporalField
-import java.time.temporal.TemporalUnit
 import kotlin.math.atan
 import kotlin.math.pow
 
@@ -33,12 +30,12 @@ class OpenMeteoService {
                 hourly.time
                     .mapIndexed { index, time ->
                         // TODO: maybe use location local datetime?
-                        val instant = LocalDateTime.parse(time).atOffset(ZoneOffset.UTC).toLocalDateTime()
+                        val localDateTime = LocalDateTime.parse(time).toInstant(ZoneOffset.UTC).atZone(ZoneId.systemDefault()).toLocalDateTime()
                         Conditions(
                             temperature = hourly.temperature_2m[index],
                             humidity = hourly.relative_humidity_2m[index],
                             wind = hourly.wind_speed_10m[index],
-                            time = instant
+                            time = localDateTime
                         )
                     }
                     .filter { it.time.isAfter(now.minusHours(1)) }
