@@ -38,7 +38,7 @@ class OpenMeteoService {
                             time = localDateTime
                         )
                     }
-                    .filter { it.time.isAfter(now.minusHours(1)) }
+                    .filter { it.time.isAfter(now) }
                     .sortedBy { it.time }
                     .take(24)
             } ?: emptyList()

@@ -104,7 +104,7 @@ fun DashboardScreen(
                             }
                         )
                         CurrentConditions(state.conditions)
-                        ForecastedConditions(state.forecast)
+                        ForecastedConditions(listOf(state.conditions) + state.forecast)
                     }
                 }
             }
@@ -179,7 +179,7 @@ private fun ShortForecast(
     now: LocalDateTime,
     modifier: Modifier = Modifier,
 ) {
-    val text = "%.1f°".format(conditions.wetBulbEstimate) // half-even rounding mode
+    val text = "%.0f°".format(conditions.wetBulbEstimate) // half-even rounding mode
     val guideline = Guideline.forConditions(conditions)
     val timeFormatter = remember { DateTimeFormatter.ofPattern("k'h'") }
 
