@@ -1,4 +1,4 @@
-# Web Bulb App for Android
+# Wet Bulb App for Android
 
 Welcome to the repo for my simple weather app!
 
